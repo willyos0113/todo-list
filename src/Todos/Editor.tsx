@@ -1,18 +1,32 @@
 import { ChangeEventHandler, FC, MouseEventHandler, useState } from "react";
-import { Priority, Props as TodoItemProps } from "./TodoItem";
+import { Priority } from "./TodoItem";
 import teamMembers from "./utils/team-members.json";
 
-interface Props extends TodoItemProps {
+export interface TodoItemModel {
+  title: string;
+  content: string;
+  priority: number;
+  resolved: boolean;
+  assignee?: string;
+}
+
+interface Props {
+  todo?: TodoItemModel;
+  onSave: (todo: TodoItemModel) => void;
   onCancel: () => void;
 }
 
 export const Editor: FC<Props> = (props) => {
   // React 狀態
-  const [title, setTitle] = useState<string>(props.title);
-  const [priority, setPriority] = useState<Priority>(props.priority);
-  const [assignee, setAssignee] = useState<string>(props.assignee ?? "");
-  const [content, setContent] = useState<string>(props.content);
-  const [resolved, setResolved] = useState<boolean>(props.resolved);
+  const [title, setTitle] = useState<string>(props.todo?.title ?? "");
+  const [priority, setPriority] = useState<Priority>(
+    props.todo?.priority ?? Priority.LOW
+  );
+  const [assignee, setAssignee] = useState<string>(props.todo?.assignee ?? "");
+  const [content, setContent] = useState<string>(props.todo?.content ?? "");
+  const [resolved, setResolved] = useState<boolean>(
+    props.todo?.resolved ?? false
+  );
 
   // 事件函數
   const handleTitleChange: ChangeEventHandler<HTMLInputElement> = (e) =>
@@ -25,16 +39,8 @@ export const Editor: FC<Props> = (props) => {
     setContent(e.target.value);
   const handleResolvedChange: ChangeEventHandler<HTMLInputElement> = () =>
     setResolved(!resolved);
-  const handleSaveClick: MouseEventHandler<HTMLButtonElement> = () => {
-    props.updateTodo(props.id, {
-      title,
-      priority,
-      assignee,
-      content,
-      resolved,
-    }); // 更新 TodoItem 的資料
-    props.onCancel();
-  };
+  const handleSaveClick: MouseEventHandler<HTMLButtonElement> = () =>
+    props.onSave({ title, priority, assignee, content, resolved });
 
   return (
     <div className="box">

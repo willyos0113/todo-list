@@ -1,7 +1,7 @@
 import { faList, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FC, useState } from "react";
-import { Editor } from "./Editor";
+import { Editor, TodoItemModel as EditorItemModel } from "./Editor";
 import { TodoItemModel } from "./utils/getTodoItems";
 
 export enum Priority {
@@ -50,18 +50,22 @@ export const TodoItem: FC<Props> = ({
   const handleEditClick = () => setEditing(true); // 由當前元件執行
   const handleCancelClick = () => setEditing(false); // 由下一層 <Editor/> 執行
   const handleDeleteClick = () => deleteTodo(id); // 由當前元件執行
+  const handleSaveClick = (todo: EditorItemModel) => {
+    updateTodo(id, todo);
+    setEditing(false);
+  };
 
   return editing ? (
     <Editor
       {...{
-        id,
-        title,
-        content,
-        priority,
-        resolved,
-        assignee,
-        updateTodo,
-        deleteTodo,
+        todo: {
+          title,
+          content,
+          priority,
+          resolved,
+          assignee,
+        },
+        onSave: handleSaveClick,
         onCancel: handleCancelClick,
       }}
     />

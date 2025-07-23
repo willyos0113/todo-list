@@ -1,13 +1,17 @@
-import { FC, JSX, useState } from "react";
-import { Priority, TodoItem } from "./TodoItem";
+import { FC, useState } from "react";
+import { TodoItem } from "./TodoItem";
 import { getTodoItems, TodoItemModel } from "./utils/getTodoItems";
+import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Editor, TodoItemModel as newItemModel } from "./Editor";
+import { v4 as uuid } from "uuid";
 
 export const TodoList: FC = () => {
   // 從資料源取得資料
-  const itemsLst: TodoItemModel[] = getTodoItems(10);
+  const itemsLst: TodoItemModel[] = getTodoItems(1);
   const [todos, setTodos] = useState<TodoItemModel[]>(itemsLst);
 
-  // 更新 TodoItem 的資料
+  // 更新 TodoItem
   const updateTodo = (id: string, update: Partial<TodoItemModel>) => {
     setTodos(todos.map((i) => (i.id === id ? { ...i, ...update } : i)));
   };
@@ -17,42 +21,50 @@ export const TodoList: FC = () => {
     setTodos(todos.filter((i) => i.id !== id));
   };
 
-  // 判斷 "高、中、低優先" 共3個組別
-  const itemsToRender = (priorityLevel: Priority): JSX.Element[] => {
-    return itemsLst
-      .filter((item) => item.priority === priorityLevel)
-      .map((item) => <TodoItem {...item} />);
+  // 新增 TodoItem
+  const [creating, setCreating] = useState<boolean>(false);
+  const createTodo = (newTodo: TodoItemModel) => {
+    setTodos([...todos, newTodo]);
   };
-
-  // 判斷 "標題" 文字
-  const titleToRender = (priorityLevel: Priority): string => {
-    return priorityLevel === Priority.HIGH
-      ? "HIGH"
-      : priorityLevel === Priority.MEDIUM
-      ? "MEDIUM"
-      : priorityLevel === Priority.LOW
-      ? "LOW"
-      : "ERROR";
+  const handleCreateTodo = (todo: newItemModel) => {
+    const t = Date.now();
+    createTodo({ id: uuid(), createdAt: t, lastModifiedAt: t, ...todo });
+    setCreating(false);
   };
-
-  // 迭代 Priority 渲染 高、中、低優先 共3個組別
-  const levelGroupToRender = Object.values(Priority)
-    .filter((prior) => typeof prior === "number")
-    .map((level) => (
-      <div>
-        <p className="title is-4">{titleToRender(level)}</p>
-        <div className="columns is-multiline">{itemsToRender(level)}</div>
-        <hr className="has-background-grey-lighter my-4"></hr>
-      </div>
-    ));
 
   return (
-    <div className="columns is-multiline">
-      {todos.map((item) => (
-        <div className="column is-2" key={item.id}>
-          <TodoItem {...item} updateTodo={updateTodo} deleteTodo={deleteTodo} />
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="columns is-multiline">
+        {todos.map((item) => (
+          <div className="column is-3" key={item.id}>
+            <TodoItem
+              {...item}
+              updateTodo={updateTodo}
+              deleteTodo={deleteTodo}
+            />
+          </div>
+        ))}
+      </div>
+      {creating && (
+        <Editor
+          onSave={handleCreateTodo}
+          onCancel={() => {
+            setCreating(false);
+          }}
+        />
+      )}
+      <div>
+        <button
+          className="button is-rounded is-primary is-medium"
+          onClick={() => {
+            setCreating(true);
+          }}
+        >
+          <span className="icon">
+            <FontAwesomeIcon icon={faPenToSquare} size="xl" />
+          </span>
+        </button>
+      </div>
+    </>
   );
 };
